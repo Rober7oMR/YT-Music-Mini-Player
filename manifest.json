@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "YT Music Mini Player & Lyrics",
+  "version": "1.0",
+  "default_locale": "en",
+  "description": "__MSG_ext_description__",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "activeTab", 
+    "windows"
+  ], 
+  "action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://music.youtube.com/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "host_permissions": [
+    "https://lrclib.net/*"
+  ]
+}

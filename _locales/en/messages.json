@@ -1,0 +1,31 @@
+{
+  "ext_description": { "message": "Mini player for YouTube Music with real-time synchronized lyrics and PiP floating window." },
+  "aviso_no_tab_titulo": { "message": "YouTube Music closed" },
+  "aviso_no_tab_desc": { "message": "Open the YouTube Music web player and play a song to sync." },
+  "btn_abrir_ytmusic": { "message": "Open YouTube Music" },
+  "info_cargando": { "message": "Loading..." },
+  "lyrics_buscando": { "message": "Searching for lyrics..." },
+  "title_sync_alt": { "message": "Search alternative lyrics / Sync" },
+  "title_modo_lectura": { "message": "Toggle Karaoke / Text Mode" },
+  "title_toggle_lyrics": { "message": "View Lyrics" },
+  "title_prev": { "message": "Previous" },
+  "title_play_pause": { "message": "Play / Pause" },
+  "title_next": { "message": "Next" },
+  "title_mini_mode": { "message": "Compact Mode" },
+  "title_pip_btn": { "message": "Picture-in-Picture" },
+
+  "js_desconocido": {"message": "Unknown"},
+
+  "js_no_versiones": { "message": "No more synchronized versions found." },
+  "js_error_servidor": { "message": "Error connecting to the server." },
+  "js_no_letras_disp": { "message": "No lyrics available." },
+  "js_sin_letras_yt": { "message": "No YouTube lyrics available." },
+  "js_sin_letra_disp": { "message": "No lyrics available." },
+  "js_alert_no_pip": { "message": "Your browser does not support Document PiP" },
+  "js_pip_aviso_linea1": { "message": "Playing in Picture-in-Picture mode.<br>Do not close this window." },
+  "js_pip_aviso_linea2": { "message": "If you have trouble viewing the PiP mode, <span id=\"retornar-pip-link\">click here</span> to return to this window." },
+  "lyrics_version_indicador": {
+    "message": "✨ Version [$1 of $2] (ID: $3)",
+    "description": "Indicator for current alternative lyric version with placeholders."
+  }
+}

@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YT Music Mini</title>
+    <style>
+        /* ========================================================= */
+        /* RESET Y CONFIGURACIÓN BASE (ELÁSTICA)                     */
+        /* ========================================================= */
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body { 
+            min-width: 250px;
+            min-height: 350px;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #030303;
+            color: white; 
+            font-family: sans-serif; 
+            text-align: center;
+            overflow: hidden;
+        }
+
+        /* ========================================================= */
+        /* CONTENEDORES PRINCIPALES Y CAPAS                          */
+        /* ========================================================= */
+        #main-app {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            position: relative;
+            transition: background-image 0.5s ease-in-out;
+        }
+
+        /* Capa elástica que asiste a la legibilidad sobre la portada */
+        .overlay {
+            width: 100% !important;
+            height: 100% !important;
+            padding: 15px;
+            box-sizing: border-box;
+            background-color: rgba(0, 0, 0, 0.6) !important;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            position: relative; 
+            z-index: 1;
+        }
+
+        /* ========================================================= */
+        /* SECCIÓN 1: METADATOS DE LA CANCIÓN                        */
+        /* ========================================================= */
+        #info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            width: 100%;
+            min-height: 60px;
+            max-height: 65px; 
+            padding: 10px 0;
+            overflow: hidden;
+            flex-shrink: 0; /* Impide que se comprima al estirar */
+        }
+        
+        #title {
+            font-size: 1.2em;
+            font-weight: bold;
+            white-space: normal;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        #artist {
+            font-size: 12px;
+            color: #b3b3b3;
+            margin: 0;
+            display: block;
+            width: 100%;
+            line-height: 1.3;
+        }
+
+        #artist .album-info {
+            display: block;
+            width: 100%;
+            color: #9f9f9f; 
+            font-size: 11px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Contenedor del Marquesina para el Modo Compacto / Mini */
+        #mini-info-container {
+            display: none;
+            width: 100%;
+            height: 25px;
+            overflow: hidden;
+            position: relative;
+            margin: 5px 0;
+            flex-shrink: 0;
+        }
+        
+        .marquee {
+            position: absolute;
+            white-space: nowrap;
+            will-change: transform;
+            animation: marquee 12s linear infinite;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(240px); }
+            100% { transform: translateX(-100%); }
+        }
+
+        .mini-title {
+            font-weight: bold;
+            color: #ffffff;
+            font-size: 14px;
+        }
+
+        .mini-artist {
+            color: #bbbbbb;
+            font-size: 13px;
+            margin-left: 4px;
+        }
+
+        /* ========================================================= */
+        /* SECCIÓN 2: CUADRO DE LETRAS Y MODO KARAOKE (ELÁSTICO)     */
+        /* ========================================================= */
+        #lyrics-container {
+            display: none; 
+            flex-grow: 1; /* Absorbe el 100% del espacio dinámico del resize */
+            width: 100%;
+            min-height: 0; /* PERMITE que Flexbox reduzca la caja dinámicamente */
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 10px 4px 10px 10px;
+            margin: 5px 0;
+            scrollbar-gutter: stable;
+            position: relative !important;
+        }
+        
+        #lyrics-content {
+            white-space: pre-wrap;
+            line-height: 1.6;
+            font-size: 14px;
+            color: #eee;
+            padding-top: 25px !important;
+            padding-bottom: 25px;
+            box-sizing: border-box !important;
+            overflow: hidden;
+        }
+
+        .linea-karaoke {
+            font-size: 14px !important;
+            color: rgba(255, 255, 255, 0.35) !important;
+            margin: 14px 0 !important;
+            transition: color 0.25s ease, font-size 0.25s ease, transform 0.25s ease !important;
+            text-align: center !important;
+            transform-origin: center center;
+            will-change: transform, color;
+            padding: 0 25px;
+            box-sizing: border-box;
+            backface-visibility: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+                
+        .linea-karaoke.activa {
+            color: #ffffff !important;
+            font-weight: bold !important;
+            transform: scale(1.12) !important;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.4) !important;
+        }
+
+        /* Barra de Scroll Estilizada */
+        #lyrics-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #lyrics-container::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+
+        #lyrics-container::-webkit-scrollbar-thumb {
+            background-color: rgba(136, 136, 136, 0.5);
+            border-radius: 10px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+            transition: background-color 0.3s;
+        }
+
+        #lyrics-container::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(160, 160, 160, 0.8);
+        }
+
+        #toggle-modo-lectura {
+            cursor: pointer !important;
+            background: none !important;
+            border: none !important;
+            padding: 0px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.2s, transform 0.1s, filter 0.2s;
+            color: #ffffff !important;
+            opacity: 0.35;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4));
+            right: 6%;
+        }
+
+        #toggle-modo-lectura:hover {
+            transform: scale(1.15);
+            opacity: 0.75;
+        }
+
+        #toggle-modo-lectura.activo {
+            opacity: 1 !important;
+            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.8)) drop-shadow(0 2px 4px rgba(0,0,0,0.6)) !important;
+        }
+
+        .cargando-animacion {
+            pointer-events: none; 
+            animation: pulsoSuave 1.4s infinite ease-in-out !important;
+        }
+
+        @keyframes pulsoSuave {
+            0% { opacity: 1; transform: scale(1.1); }
+            50% { opacity: 0.2; transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1.1); }
+        }
+
+        /* ========================================================= */
+        /* SECCIÓN 3: BARRA DE PROGRESO Y TIEMPOS                    */
+        /* ========================================================= */
+        #progress-container {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            width: 95%;
+            margin: 10px auto;
+            height: 30px;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        #current-time, #total-time {
+            font-size: 11px;
+            color: #aaa;
+            min-width: 40px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        #progress-bar-bg {
+            position: relative;
+            flex: 1;
+            height: 6px; 
+            background: rgba(255, 255, 255, 0.2);
+            margin: 0 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            overflow: visible; 
+        }
+
+        #progress-container:hover #progress-bar-bg {
+            height: 8px;
+        }
+
+        #progress-bar-fill {
+            width: 0%;
+            height: 100%;
+            background: #f00;
+            border-radius: 3px;
+            pointer-events: none;
+            transition: width 0.5s linear;
+            position: relative;
+        }
+
+        .dragging #progress-bar-fill {
+            transition: none !important;
+        }
+
+        #progress-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -6px;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 2;
+        }
+
+        #progress-container:hover #progress-bar-fill::after,
+        .dragging #progress-bar-fill::after {
+            opacity: 1;
+        }
+
+        #progress-tooltip {
+            position: absolute;
+            top: -28px; 
+            left: 0;
+            transform: translateX(-50%);
+            background: #444;
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            pointer-events: none;
+            display: none;
+            white-space: nowrap;
+            z-index: 100;
+        }
+
+        #progress-bar-bg:hover #progress-tooltip {
+            display: block;
+        }
+
+        /* ========================================================= */
+        /* SECCIÓN 4: BOTONERA DE CONTROL INFERIOR                   */
+        /* ========================================================= */
+        .controls { 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            height: auto;
+            padding-top: 5px;
+            flex-shrink: 0;
+        }
+      
+        .controls button { 
+            cursor: pointer; 
+            background: none !important; 
+            border: none !important;
+            padding: 0px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0; 
+            width: 26px;
+            height: 26px;
+            color: #ffffff !important;
+            opacity: 0.65;
+        }
+
+        .controls button svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        #play-btn {
+            transform: scale(1.2); 
+        }
+
+        #playPause svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .controls button:hover { 
+            transform: scale(1.1); 
+            color: #ffffff; 
+        }
+
+        .controls button:not(.activo):hover { 
+            transform: scale(1.15); 
+            opacity: 0.75;
+        }
+      
+        .controls button:active { 
+            transform: scale(0.95); 
+        }
+
+        .controls button.activo {
+            opacity: 1 !important; 
+            transform: scale(1.1); 
+            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.6)) !important;
+        }
+
+        #main-app.modo-mini-activo {
+            width: 100% !important;
+            background-size: cover !important;
+            background-position: center !important;
+        }
+
+        .controls button, #toggle-lyrics, #mini-mode, #pip-btn, #toggle-modo-lectura {
+            filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.85)) drop-shadow(0px 0px 1px rgba(0, 0, 0, 0.5));
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        /* --- Contenedor unificado para los botones --- */
+        #wrapper-botones-flotantes {
+            display: none; /* Controlado por JS */
+            flex-direction: row;
+            justify-content: space-between; /* Reemplazado gap% por distribución fluida */
+            align-items: center;
+            padding: 0 25px;
+            width: 100%;
+            margin: 0;
+            position: absolute; /* Posiciona los botones sobre el contenedor de letras */
+            right: 0%;
+            top: 26%;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* Estilo unificado para los dos botones (Modo lectura y Alternativas) */
+        #wrapper-botones-flotantes button {
+            cursor: pointer;
+            background: none;
+            border: none !important;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white !important;
+            transition: all 0.2s ease;
+            pointer-events: auto;
+        }
+
+        #wrapper-botones-flotantes button svg {
+            display: block; /* Elimina espacios en blanco de línea base */
+            margin: auto;   /* Centrado extra de seguridad */
+            pointer-events: none; /* Asegura que el clic siempre lo capture el botón, no el icono */
+        }
+
+        #wrapper-botones-flotantes button:hover {
+            transform: scale(1.15);
+        }
+
+        #sync-lyrics-alt:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none; /* Evita que responda a efectos hover o clics */
+        }
+
+        /* ========================================================= */
+        /* MODO HÍBRIDO PIP ACTIVO (ESTABLE CON INTERRUPTOR)         */
+        /* ========================================================= */
+        body.pip-activo {
+            width: 250px !important;
+            height: 110px !important; 
+            background-color: #030303 !important;
+        }
+
+        body.pip-activo #main-app {
+            display: none !important; 
+        }
+
+        #aviso-pip-hibrido {
+            display: flex !important;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100% !important;
+            height: 100% !important;
+            box-sizing: border-box;
+            padding: 10px;
+            text-align: center;
+            background-color: #111;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #aviso-pip-hibrido p {
+            font-size: 11px;
+            line-height: 1.4;
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0 0 8px 0;
+            text-align: center;
+        }
+
+        #aviso-pip-hibrido span {
+            color: #ffffff;
+            font-weight: bold;
+            text-decoration: underline;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        #aviso-pip-hibrido span:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* ========================================================= */
+        /* SECCIÓN 5: CONTROL DE VOLUMEN VERTICAL FIJO CENTRADO      */
+        /* ========================================================= */
+        .volume-hitbox {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 32px; 
+            height: 32px;
+            cursor: pointer;
+        }
+
+        /* Caja acrílica fija e inmune a las rotaciones extrañas */
+        .volume-slider-wrapper {
+            display: none;
+            position: absolute;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 15, 15, 0.85); 
+            backdrop-filter: blur(4px); 
+            padding: 8px 0; 
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 9999;
+            width: 20px; 
+            height: 85px;  
+            box-sizing: border-box;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .volume-slider-wrapper input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            writing-mode: vertical-lr;
+            direction: rtl; 
+            width: 4px; 
+            height: 100%; 
+            background: transparent;
+            cursor: pointer;
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        .volume-slider-wrapper input[type="range"]::-webkit-slider-runnable-track {
+            width: 4px;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 2px;
+        }
+        
+        .volume-slider-wrapper input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px; 
+            height: 12px;
+            border-radius: 50%;
+            background: #ff0000;
+            cursor: pointer;
+            box-shadow: 0 0 4px rgba(0,0,0,0.6);
+            /* Centrado horizontal perfecto en el eje de la barrita */
+            margin-left: -4px; 
+        }
+        
+        .volume-hitbox:hover .volume-slider-wrapper,
+        .volume-slider-wrapper:hover {
+            display: flex !important;
+        }
+
+        .volume-hitbox:hover button {
+            opacity: 1 !important;
+            transform: scale(1.15) !important; 
+        }
+    </style>
+</head>
+<body>
+    <div id="aviso-no-tab" style="display: none; width: 100%; height: 100%; flex-direction: column; justify-content: center; align-items: center; padding: 25px; background-color: #030303; box-sizing: border-box;">
+        <svg viewBox="0 0 24 24" fill="#ff4444" width="44" height="44" style="margin-bottom: 12px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+        </svg>
+        <h3 data-i18n="aviso_no_tab_titulo" style="margin: 0 0 8px 0; font-size: 15px; font-weight: 600; font-family: sans-serif; color: white;">YouTube Music cerrado</h3>
+        <p data-i18n="aviso_no_tab_desc" style="margin: 0 0 16px 0; font-size: 11px; color: #aaa; line-height: 1.4; font-family: sans-serif;">Abre la versión web de YouTube Music y reproduce una canción para sincronizar el reproductor.</p>
+        <button id="btn-abrir-ytmusic" data-i18n="btn_abrir_ytmusic" style="background-color: #ff0000; color: white; border: none; padding: 8px 16px; border-radius: 18px; font-size: 11px; font-weight: bold; cursor: pointer; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); transition: transform 0.2s;">
+            Abrir YouTube Music
+        </button>
+    </div>
+
+    <div id="main-app">
+        <div class="overlay">
+            
+            <div id="info">
+                <span id="title" data-i18n="info_cargando" >Cargando...</span>
+                <span id="artist">--</span>
+            </div>
+        
+            <div id="mini-info-container">
+                <div id="mini-text" class="marquee">
+                    <span class="mini-title" id="m-title"></span><span class="mini-artist" id="m-artist"></span>
+                </div>
+            </div>
+
+            <div id="wrapper-botones-flotantes" class="capa-flotante-boton">
+                <button id="sync-lyrics-alt" class="btn-alternativas-espejo" data-i18n-title="title_sync_alt" title="Buscar letra alternativa / Sincronizar" aria-label="Sincronizar o buscar letras alternativas">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/>
+                    </svg>
+                </button>
+                <button id="toggle-modo-lectura" data-i18n-title="title_modo_lectura" title="Alternar Modo Karaoke / Texto" aria-label="Cambiar entre modo karaoke y texto plano" style="display: none;">
+                    <svg class="icon-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        <line x1="12" y1="19" x2="12" y2="23"/>
+                        <line x1="8" y1="23" x2="16" y2="23"/>
+                    </svg>
+                    <svg class="icon-mic-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="display: none;">
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                        <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/>
+                        <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"/>
+                        <line x1="12" y1="19" x2="12" y2="23"/>
+                        <line x1="8" y1="23" x2="16" y2="23"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div id="lyrics-container">
+                <div id="lyrics-content">Buscando letras...</div>
+            </div>
+
+            <div id="progress-container">
+                <span id="current-time">0:00</span>
+                <div id="progress-bar-bg">
+                    <div id="progress-bar-fill"></div>
+                    <div id="progress-tooltip">0:00</div>
+                </div>
+                <span id="total-time">0:00</span>
+            </div>
+
+            <div class="controls">
+                <div class="volume-hitbox">
+                    <div class="volume-slider-wrapper">
+                        <input type="range" id="volume-slider" min="0" max="100" value="100" aria-label="Control de volumen" style="background: linear-gradient(to top, #ff0000 100%, rgba(255,255,255,0.2) 100%);">
+                    </div>
+                    <button id="btn-icono-volumen" title="Mute/Unmute" aria-label="Silenciar o activar sonido" style="margin: 0;">
+                        <svg id="volume-svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                            <path id="volume-path" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                        </svg>
+                    </button>
+                </div>
+                <button id="toggle-lyrics" data-i18n-title="title_toggle_lyrics" title="Ver Letras" aria-label="Mostrar u ocultar panel de letras">
+                    <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
+                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                    </svg>
+                </button>
+                <button id="prev" data-i18n-title="title_prev" title="Anterior" aria-label="Canción anterior">
+                    <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
+                        <path d="M6 6h2v12H6V6zm3.5 6l8.5 6V6l-8.5 6z"/>
+                    </svg>
+                </button>
+                <button id="playPause" data-i18n-title="title_play_pause" title="Reproducir / Pausar" aria-label="Reproducir o pausar">
+                    <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" width="24" height="24">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    <svg class="icon-pause" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" width="24" height="24" style="display: none;">
+                        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                    </svg>
+                </button>
+                <button id="next" data-i18n-title="title_next" title="Siguiente" aria-label="Siguiente canción">
+                    <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
+                        <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+                    </svg>
+                </button>
+                <button id="mini-mode" data-i18n-title="title_mini_mode" title="Modo Compacto" aria-label="Alternar modo de visualización compacto">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                        <path d="M19 5l-5.5 5.5M18.5 10.5h-5v-5"/>
+                        <path d="M5 19l5.5-5.5M5.5 13.5h5v5"/>
+                    </svg>
+                </button>
+                <button id="pip-btn" data-i18n-title="title_pip_btn" title="Ventana Flotante" aria-label="Alternar ventana Picture-in-Picture">
+                    <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
+                        <path d="M19 7h-8v6h8V7zm2-4H3c-1.1 0-2 .9-2 2v14c0 1.1.9 1.98 2 1.98h18c1.1 0 2-.88 2-1.98V5c0-1.1-.9-2-2-2zm0 16.01H3V4.99h18v14.02z"/>
+                    </svg>
+                </button>
+            </div>
+
+        </div>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>

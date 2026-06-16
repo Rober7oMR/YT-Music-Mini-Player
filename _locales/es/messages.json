@@ -1,0 +1,36 @@
+{
+  "ext_description": { "message": "Mini reproductor para YouTube Music con letras sincronizadas en tiempo real y ventana flotante PiP." },
+  "aviso_no_tab_titulo": { "message": "YouTube Music cerrado" },
+  "aviso_no_tab_desc": { "message": "Abre la versión web de YouTube Music y reproduce una canción para sincronizar el reproductor." },
+  "btn_abrir_ytmusic": { "message": "Abrir YouTube Music" },
+  "info_cargando": { "message": "Cargando..." },
+  "lyrics_buscando": { "message": "Buscando letras..." },
+  "title_sync_alt": { "message": "Buscar letra alternativa / Sincronizar" },
+  "title_modo_lectura": { "message": "Alternar Modo Karaoke / Texto" },
+  "title_toggle_lyrics": { "message": "Ver Letras" },
+  "title_prev": { "message": "Anterior" },
+  "title_play_pause": { "message": "Reproducir / Pausar" },
+  "title_next": { "message": "Siguiente" },
+  "title_mini_mode": { "message": "Modo Compacto" },
+  "title_pip_btn": { "message": "Ventana Flotante" },
+
+  "js_desconocido": {"message": "Desconocido"},
+
+  "js_no_versiones": { "message": "No se encontraron más versiones sincronizadas." },
+  "js_error_servidor": { "message": "Error al conectar con el servidor." },
+  "js_no_letras_disp": { "message": "No se encontraron letras disponibles." },
+  "js_sin_letras_yt": { "message": "No hay letras de YouTube disponibles." },
+  "js_sin_letra_disp": { "message": "Sin letra disponible." },
+  "js_alert_no_pip": { "message": "Tu navegador no soporta Document PiP" },
+  "js_pip_aviso_linea1": { "message": "Reproduciendo en modo flotante.<br>No cierres esta ventana." },
+  "js_pip_aviso_linea2": { "message": "Si tienes problemas para visualizar el modo pip, <span id=\"retornar-pip-link\">haz clic aquí</span> para volver a esta ventana." },
+  "lyrics_version_indicador": {
+    "message": "✨ Versión [$1 de $2] (ID: $3)",
+    "description": "Indicador de la versión de la letra alternativa actual con placeholders.",
+    "placeholders": {
+      "1": { "content": "$1", "example": "1" },
+      "2": { "content": "$2", "example": "3" },
+      "3": { "content": "$3", "example": "abc123xyz" }
+    }
+  }
+}
