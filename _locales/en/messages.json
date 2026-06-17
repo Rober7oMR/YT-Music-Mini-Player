@@ -15,6 +15,13 @@
   "title_pip_btn": { "message": "Picture-in-Picture" },
 
   "js_desconocido": {"message": "Unknown"},
+  
+  "txt_nueva_version": {
+    "message": "New version available!"
+  },
+  "txt_descargar": {
+    "message": "Download"
+  },
 
   "js_no_versiones": { "message": "No more synchronized versions found." },
   "js_error_servidor": { "message": "Error connecting to the server." },
@@ -25,7 +32,7 @@
   "js_pip_aviso_linea1": { "message": "Playing in Picture-in-Picture mode.<br>Do not close this window." },
   "js_pip_aviso_linea2": { "message": "If you have trouble viewing the PiP mode, <span id=\"retornar-pip-link\">click here</span> to return to this window." },
   "lyrics_version_indicador": {
-    "message": "✨ Version [$1 of $2] (ID: $3)",
+    "message": "Version [$1 of $2] (ID: $3)",
     "description": "Indicator for current alternative lyric version with placeholders."
   }
 }

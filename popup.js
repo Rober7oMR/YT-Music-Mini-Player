@@ -1,6 +1,6 @@
 //popup.js
 /* === VARIABLES GLOBALES === */
-let contextoPantalla = document;
+let contextoPantalla = document; // Cambia dinámicamente entre 'document' de la extensión y el contexto del PiP
 let ultimaCancionVista = "";
 let letrasKaraokeActual = [];
 let ultimaLineaActivaIdx = -1;
@@ -16,6 +16,39 @@ const SVG_VOL_ALTO = "M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.0
 const SVG_VOL_BAJO = "M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z";
 const SVG_VOL_MUTE = "M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.21.05-.42.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z";
 
+const PRODUCCION = true; // Cambiar a true para producción, false para desarrollo
+if (PRODUCCION) {
+    console.log = function() {};
+    console.info = function() {};
+}
+
+/* === UPDATE CHECKER === */
+// Se consulta el almacenamiento local persistido por background.js. 
+// Usamos sessionStorage para respetar la decisión del usuario si descarta el aviso temporalmente.
+chrome.storage.local.get(["updateAvailable", "updateUrl"], (res) => {
+    if (res.updateAvailable && res.updateUrl && !sessionStorage.getItem("bannerCerrado")) {
+        const banner = document.getElementById("banner-actualizacion");
+        const enlace = document.getElementById("enlace-actualizar");
+        const botonCerrar = document.getElementById("cerrar-banner");
+        
+        if (banner && enlace) {
+            enlace.href = res.updateUrl; 
+            banner.style.display = "block"; 
+            
+            if (typeof traducirInterfaz === "function") {
+                traducirInterfaz(banner);
+            }
+        }
+
+        if (botonCerrar && banner) {
+            botonCerrar.addEventListener("click", () => {
+                banner.style.display = "none";
+                sessionStorage.setItem("bannerCerrado", "true");
+            });
+        }
+    }
+});
+
 /* === FORMATO DE TIEMPO === */
 function formatTime(s) {
     if (isNaN(s)) return "0:00";
@@ -25,6 +58,11 @@ function formatTime(s) {
 }
 
 /* === PROCESAMIENTO DE METADATOS === */
+/**
+ * Normaliza y limpia las cadenas de texto del reproductor de YouTube Music.
+ * Elimina carátulas sueltas, marcas de separación (•) y textos entre paréntesis/corchetes
+ * para optimizar el porcentaje de aciertos en la API externa de LRCLIB.
+ */
 function descomponerMetadatos(tituloCrudo, artistaCrudo) {
     let tituloLimpio = tituloCrudo ? tituloCrudo.split("\n")[0].trim() : "";
     let artistaPrincipal = "";
@@ -51,6 +89,12 @@ function descomponerMetadatos(tituloCrudo, artistaCrudo) {
 }
 
 /* === PARSER DE LETRAS LRC === */
+/**
+ * Convierte un bloque de texto en formato nativo LRC timestamp a un array indexado de objetos.
+ * Expresión regular encargada de capturar minutos, segundos y milisegundos.
+ * @param {string} lrcText - Cadena cruda de texto tipo [01:23.45] Letra.
+ * @returns {Array<{tiempo: number, texto: string}>} Array ordenado cronológicamente por segundos.
+ */
 function parsearLetrasLRC(lrcText) {
     if (!lrcText) return [];
     const lineas = lrcText.split("\n");
@@ -120,6 +164,12 @@ function inyectarLetrasEnContenedor() {
 }
 
 /* === PROGRESO DEL KARAOKE === */
+/**
+ * Controla el resaltado síncrono del karaoke.
+ * Se utiliza requestAnimationFrame para delegar el cálculo del scroll 3D/Smooth a los ciclos
+ * libres del procesador, reduciendo el lag al renderizar fuentes pesadas en ventanas PiP.
+ * @param {number} segundosActuales - Transcurso de tiempo del reproductor inyectado.
+ */
 function actualizarProgresoKaraoke(segundosActuales) {
     if (modoLecturaActivo || !letrasKaraokeActual || letrasKaraokeActual.length === 0) return;
 
@@ -152,6 +202,11 @@ function actualizarProgresoKaraoke(segundosActuales) {
 }
 
 /* === BÚSQUEDA LRCLIB === */
+/**
+ * Consulta asíncrona principal contra el servidor LRCLIB.
+ * Implementa una estrategia de fallback reactiva: si la búsqueda con duración exacta falla (404),
+ * reintenta la consulta omitiendo los segundos exactos antes de dar por perdida la canción.
+ */
 async function buscarLetraLRCLIB(tituloBusqueda, artistabusqueda, duracionSegundos) {
     if (!tituloBusqueda || !artistabusqueda) return null;
     buscandoEnProgreso = true;
@@ -171,6 +226,7 @@ async function buscarLetraLRCLIB(tituloBusqueda, artistabusqueda, duracionSegund
         let respuesta = await fetch(url);
         
         if (!respuesta.ok && respuesta.status === 404 && durationParam !== '') {
+            // Guardrail de carrera asíncrona: detiene el hilo si el usuario saltó de pista durante la petición.
             if (cancionAlIniciarPeticion !== ultimaCancionVista) {
                 if (btnLectura) btnLectura.classList.remove('cargando-animacion');
                 console.warn(`[LRCLIB] Petición de respaldo abortada. El usuario pasó de canción.`);
@@ -599,8 +655,7 @@ contextoPantalla.getElementById('mini-mode')?.addEventListener('click', () => {
         isMini = true;
     } else {
         mainAppContainer.classList.remove('modo-mini-activo');
-        
-        // CORRECCIÓN: Limpiar estilos en línea de tamaño residuales en el contenedor
+
         if (mainAppContainer) {
             mainAppContainer.style.width = '';
             mainAppContainer.style.height = '';
@@ -619,8 +674,6 @@ contextoPantalla.getElementById('mini-mode')?.addEventListener('click', () => {
         if (enPiP && pipWindow) {
             pipWindow.resizeTo(260, 385);
         } else {
-            // CORRECCIÓN: Forzar siempre el tamaño exacto de producción (260x385) 
-            // evitando que variables intermedias arrastren dimensiones fantasmas.
             chrome.windows.getCurrent((win) => {
                 chrome.windows.update(win.id, { width: 260, height: 385 });
             });
@@ -701,6 +754,11 @@ contextoPantalla.addEventListener('mouseup', () => {
 });
 
 /* === EVENTOS: MODO PIP === */
+/**
+ * Motor de renderizado y control del modo Picture-in-Picture (Document PiP API).
+ * Clona dinámicamente hojas de estilo y teletransporta el nodo DOM '#main-app'
+ * hacia el árbol de la ventana flotante, remapeando la variable reactiva 'contextoPantalla'.
+ */
 let pipWindow = null;
 const btnPip = document.getElementById('pip-btn');
 if (btnPip) {
@@ -808,8 +866,12 @@ if (btnPip) {
             pipWindow.document.body.append(mainApp);
             mainApp.style.display = 'flex';
 
+            // Redirección crucial de contexto: Los selectores ahora buscarán dentro del documento flotante.
             contextoPantalla = pipWindow.document;
 
+            // Chrome guarda en caché el tamaño del PiP anterior e ignora el requestWindow.
+            // resizeTo bloqueado si no es por acción directa del usuario. 
+            // Se implementa respuesta de fallback: Forzamos la adaptación de la UI si la ventana física no coincide con el modo esperado.
             setTimeout(() => {
                 if (!pipWindow) return;
                 const alturaReal = pipWindow.innerHeight;
@@ -942,6 +1004,13 @@ document.addEventListener('DOMContentLoaded', () => {
 ajustarPantallaElastica();
 
 /* === SISTEMA INTERNACIONALIZACIÓN (i18n) === */
+/**
+ * Motor central de internacionalización para la interfaz.
+ * Escanea el árbol del DOM en busca de los selectores 'data-i18n' y 'data-i18n-title'
+ * e inyecta dinámicamente las cadenas del idioma activo del usuario.
+ * @param {HTMLElement|Document} [documentoObjetivo=document] - Se recibe como parámetro 
+ * para poder traducir secciones específicas (como el PiP o el banner de updates) sin requerir un recargo completo.
+ */
 function traducirInterfaz(documentoObjetivo = document) {
     documentoObjetivo.querySelectorAll('[data-i18n]').forEach(elem => {
         const mensaje = chrome.i18n.getMessage(elem.getAttribute('data-i18n'));

@@ -1,5 +1,4 @@
 // content.js
-
 // --- CONFIGURACIÓN DE DEPURACIÓN ---
 const DEBUG_MODE = false; // Cambia a true para ver los rastreadores en consola
 
@@ -46,6 +45,7 @@ function getLyricsFromPage() {
         
         logDebug(`[DEBUG] Contenedor ${index} visible. Saltos de línea: ${lineCount}. Longitud: ${content.length}`);
 
+        //Filtro por número de líneas ya que al reproducir una canción desde la página del artista retornaba su biografía.
         if (lineCount > maxLines && lineCount > 10) {
             logDebug(`[DEBUG] Contenedor ${index} supera filtro (> 10 líneas). Marcado como mejor candidato.`);
             maxLines = lineCount;

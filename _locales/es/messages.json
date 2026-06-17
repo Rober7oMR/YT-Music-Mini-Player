@@ -15,6 +15,13 @@
   "title_pip_btn": { "message": "Ventana Flotante" },
 
   "js_desconocido": {"message": "Desconocido"},
+  
+  "txt_nueva_version": {
+    "message": "¡Nueva versión disponible!"
+  },
+  "txt_descargar": {
+    "message": "Descargar"
+  },
 
   "js_no_versiones": { "message": "No se encontraron más versiones sincronizadas." },
   "js_error_servidor": { "message": "Error al conectar con el servidor." },
@@ -25,7 +32,7 @@
   "js_pip_aviso_linea1": { "message": "Reproduciendo en modo flotante.<br>No cierres esta ventana." },
   "js_pip_aviso_linea2": { "message": "Si tienes problemas para visualizar el modo pip, <span id=\"retornar-pip-link\">haz clic aquí</span> para volver a esta ventana." },
   "lyrics_version_indicador": {
-    "message": "✨ Versión [$1 de $2] (ID: $3)",
+    "message": "Versión [$1 de $2] (ID: $3)",
     "description": "Indicador de la versión de la letra alternativa actual con placeholders.",
     "placeholders": {
       "1": { "content": "$1", "example": "1" },
